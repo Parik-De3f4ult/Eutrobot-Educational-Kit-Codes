@@ -1,0 +1,64 @@
+/***************************************************
+   EutroBot - Water Quality Monitoring Code
+   Reads pH, TDS, and Turbidity values
+   Displays them on the Serial Monitor
+***************************************************/
+
+// -------- PIN DEFINITIONS --------
+#define PH_PIN A0
+#define TDS_PIN A1
+#define TURBIDITY_PIN A2
+
+// -------- CALIBRATION CONSTANTS --------
+// pH Sensor calibration
+float PH_offset = 0.00;   // Adjust after calibration
+
+// TDS calibration
+float TDS_factor = 0.5;   // Adjust based on sensor datasheet
+
+// Turbidity calibration
+float voltageClear = 4.5; // Voltage for clear water
+float voltageMuddy = 2.5; // Voltage for muddy water
+
+// -------- GLOBAL VARIABLES --------
+float phValue, tdsValue, turbidityValue;
+float voltage;
+
+// -------- SETUP --------
+void setup() {
+  Serial.begin(9600);
+  Serial.println("EutroBot Water Quality Monitoring Started");
+  Serial.println("=========================================");
+  delay(2000);
+}
+
+// -------- MAIN LOOP --------
+void loop() {
+  
+  // Read pH Sensor
+  int phSensorValue = analogRead(PH_PIN);
+  float phVoltage = phSensorValue * (5.0 / 1023.0);
+  phValue = 3.5 * phVoltage + PH_offset;  // Approx formula
+  Serial.print("pH Value: ");
+  Serial.println(phValue, 2);
+
+  // Read TDS Sensor
+  int tdsSensorValue = analogRead(TDS_PIN);
+  float tdsVoltage = tdsSensorValue * (5.0 / 1023.0);
+  tdsValue = (tdsVoltage * TDS_factor) * 1000; // Convert to ppm
+  Serial.print("TDS Value: ");
+  Serial.print(tdsValue, 0);
+  Serial.println(" ppm");
+
+  // Read Turbidity Sensor
+  int turbiditySensorValue = analogRead(TURBIDITY_PIN);
+  float turbidityVoltage = turbiditySensorValue * (5.0 / 1023.0);
+  // Map voltage to NTU (Nephelometric Turbidity Units)
+  turbidityValue = map(turbidityVoltage * 100, voltageMuddy * 100, voltageClear * 100, 3000, 0);
+  Serial.print("Turbidity Value: ");
+  Serial.print(turbidityValue, 0);
+  Serial.println(" NTU");
+
+  Serial.println("-----------------------------------------");
+  delay(2000); // Delay between readings
+}
